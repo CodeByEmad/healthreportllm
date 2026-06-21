@@ -11,38 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <!-- Lucide Icons CDN -->
-  <script src="https://unpkg.com/lucide@latest">
-function updateSendButtonState() {
-  const input = document.getElementById('chat-input');
-  const button = document.getElementById('chat-submit-btn');
-
-  const canSend =
-    input &&
-    input.value.trim().length > 0 &&
-    !isAiResponding;
-
-  button.disabled = !canSend;
-
-  if (canSend) {
-    button.className =
-      "p-2 rounded-lg bg-teal-500 text-slate-950 hover:bg-teal-400 transition-all";
-  } else {
-    button.className =
-      "p-2 rounded-lg bg-slate-800 text-slate-500 cursor-not-allowed transition-all";
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('chat-input');
-
-  if (input) {
-    input.addEventListener('input', updateSendButtonState);
-    input.addEventListener('keyup', updateSendButtonState);
-  }
-
-  updateSendButtonState();
-});
-	</script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   
   <style>
     body {
@@ -634,6 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id="chat-input"
             placeholder="Ask me to examine uploaded bio-markers..."
             class="w-full bg-transparent text-xs py-2.5 px-3 focus:outline-none text-slate-200 placeholder:text-slate-500"
+            oninput="updateSendButtonState()"
           />
           <button
             type="submit"
@@ -779,6 +749,28 @@ CRITICAL INSTRUCTIONS:
 3. Value Identification: Summarize metrics like blood sugar (glucose), cholesterol (LDL/HDL), vitamins, blood pressure, or hemoglobin when present. Point out which levels are high, low, or normal.
 4. Translation: Translate metrics into clear functional tasks (such as liver processing, kidney filter capacity, systemic arterial load).
 5. Tone: Calm, scientific, supportive. Do not cause unnecessary panic.`;
+
+    // ==========================================
+    // CHAT SEND BUTTON STATE MANAGER (BUG FIX)
+    // ==========================================
+    // Enables/disables the chat submit button based on input content and
+    // AI response state. This was the missing listener that caused the
+    // send button to remain permanently disabled.
+    function updateSendButtonState() {
+      const input = document.getElementById('chat-input');
+      const btn = document.getElementById('chat-submit-btn');
+      if (!input || !btn) return;
+
+      const hasText = input.value.trim().length > 0;
+
+      if (hasText && !isAiResponding) {
+        btn.disabled = false;
+        btn.className = "p-2 rounded-lg bg-teal-500 text-slate-950 hover:bg-teal-400 cursor-pointer transition-all";
+      } else {
+        btn.disabled = true;
+        btn.className = "p-2 rounded-lg bg-slate-800 text-slate-500 cursor-not-allowed transition-all";
+      }
+    }
 
     // ==========================================
     // WORKSPACE SWITCHER
@@ -1877,7 +1869,7 @@ CRITICAL INSTRUCTIONS:
 
       // Setup loading status
       isAiResponding = true;
-updateSendButtonState();
+      updateSendButtonState();
       showChatLoader(true);
       document.getElementById('chat-error-panel').classList.add('hidden');
 
@@ -1997,7 +1989,7 @@ User Prompt Query:
           });
           
           isAiResponding = false;
-updateSendButtonState();
+          updateSendButtonState();
           showChatLoader(false);
           renderChat();
         }, 1200);
@@ -2036,6 +2028,7 @@ updateSendButtonState();
             document.getElementById('chat-error-text').innerText = "Persistent timeouts occurred reaching Google's servers. Please verify your internet connection or try checking the validity of your Gemini API key.";
             document.getElementById('chat-error-panel').classList.remove('hidden');
             isAiResponding = false;
+            updateSendButtonState();
             showChatLoader(false);
             return;
           }
@@ -2053,6 +2046,7 @@ updateSendButtonState();
       }
 
       isAiResponding = false;
+      updateSendButtonState();
       showChatLoader(false);
       renderChat();
     }
