@@ -1831,8 +1831,10 @@ CRITICAL INSTRUCTIONS:
     function applySuggestedPrompt(promptText) {
       const input = document.getElementById('chat-input');
       input.value = promptText;
-      // Trigger live updates to Send button state
-      input.dispatchEvent(new Event('input'));
+      // Trigger live updates to Send button state — call directly to avoid
+      // any event-dispatch quirks
+      updateSendButtonState();
+      input.focus();
     }
 
     function resetChat() {
@@ -2116,6 +2118,22 @@ User Prompt Query:
       lucide.createIcons();
       setTimeout(() => alertContainer.remove(), 5000);
     }
+
+    // ==========================================
+    // INITIAL BOOT-UP: WIRE LISTENERS (BUG FIX)
+    // ==========================================
+    // Backup listener in case the inline oninput attribute is overridden,
+    // stripped, or fails to fire from synthetic dispatchEvent calls.
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.addEventListener('input', updateSendButtonState);
+        chatInput.addEventListener('keyup', updateSendButtonState);
+        chatInput.addEventListener('change', updateSendButtonState);
+      }
+      // Initial state sync
+      updateSendButtonState();
+    });
   </script>
 </body>
 </html>
